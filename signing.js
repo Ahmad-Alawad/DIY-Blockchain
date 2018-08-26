@@ -1,7 +1,18 @@
 'use strict';
 
 const secp256k1 = require('secp256k1');
+const sha256 = require('sha256');
 const { randomBytes, createHash } = require('crypto');
+
+// const buf1 = Buffer.from('this is a tést');
+// const buf2 = Buffer.from('7468697320697320612074c3a97374', 'hex');
+
+// console.log(buf1.toString());
+// // Prints: this is a tést
+// console.log(buf2.toString());
+// // Prints: this is a tést
+// console.log(buf1.toString('ascii'));
+// // Prints: this is a tC)st
 
 
 /**
@@ -15,7 +26,12 @@ const { randomBytes, createHash } = require('crypto');
  */
 const createPrivateKey = () => {
   // Enter your solution here
-
+  let privKey;
+  do {
+    privKey = randomBytes(32)
+  } while (!secp256k1.privateKeyVerify(privKey))
+  return privKey.toString('hex');
+  
 };
 
 /**
@@ -33,6 +49,9 @@ const createPrivateKey = () => {
  */
 const getPublicKey = privateKey => {
   // Your code here
+  const privKeyBuff = Buffer.from(privateKey, 'hex');
+  const pubKey = secp256k1.publicKeyCreate(privKeyBuff)
+  return pubKey.toString('hex');
 
 };
 
@@ -51,6 +70,12 @@ const getPublicKey = privateKey => {
  */
 const sign = (privateKey, message) => {
   // Your code here
+  
+  const privKeyBuff = Buffer.from(privateKey, 'hex');
+  const msgBuff = Buffer.from(sha256(message), 'hex');
+  const sigMsg = secp256k1.sign(msgBuff, privKeyBuff); 
+
+  return sigMsg.signature.toString('hex');
 
 };
 
@@ -66,6 +91,11 @@ const sign = (privateKey, message) => {
  */
 const verify = (publicKey, message, signature) => {
   // Your code here
+  const msgBuff = Buffer.from(sha256(message), 'hex')
+  const sigBuff = Buffer.from(signature, 'hex')
+  const pubKeyBuff = Buffer.from(publicKey, 'hex')
+
+  return secp256k1.verify(msgBuff, sigBuff, pubKeyBuff)
 
 };
 

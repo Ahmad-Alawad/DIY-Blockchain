@@ -1,6 +1,8 @@
 'use strict';
 
 const { createHash } = require('crypto');
+const crypto = require('crypto');
+
 const signing = require('./signing');
 
 
@@ -23,7 +25,11 @@ class Transaction {
    */
   constructor(privateKey, recipient, amount) {
     // Enter your solution here
-
+    this.source = signing.getPublicKey(privateKey);
+    this.recipient = recipient;
+    this.amount = amount;
+    
+    this.signature = signing.sign(privateKey,this.source+this.recipient+this.amount);
   }
 }
 
@@ -45,6 +51,14 @@ class Block {
    */
   constructor(transactions, previousHash) {
     // Your code here
+    this.transactions = transactions;
+    this.previousHash = previousHash;
+    this.nonce = 123456789;
+    let concArrOfTrans = "";
+    transactions.forEach(function(element) {
+      concArrOfTrans += element.signature.toString();
+    });
+    this.hash = crypto.createHash('sha512').update(concArrOfTrans+this.previousHash+this.nonce).toString();
 
   }
 
@@ -59,6 +73,14 @@ class Block {
    */
   calculateHash(nonce) {
     // Your code here
+    let concArrOfTrans = "";
+    this.transactions.forEach(function(element) {
+      concArrOfTrans += element.signature.toString();
+    });
+
+    this.nonce = nonce;
+    this.hash = crypto.createHash('sha512').update(concArrOfTrans+this.previousHash+nonce).digest('hex');
+
 
   }
 }
@@ -79,6 +101,9 @@ class Blockchain {
    */
   constructor() {
     // Your code here
+    var firstBlock = new Block([],null);
+    this.blocks = [firstBlock];
+
 
   }
 
@@ -87,7 +112,7 @@ class Blockchain {
    */
   getHeadBlock() {
     // Your code here
-
+    return this.blocks[this.blocks.length -1];
   }
 
   /**
@@ -96,6 +121,8 @@ class Blockchain {
    */
   addBlock(transactions) {
     // Your code here
+    var newBlock = new Block (transactions,this.getHeadBlock.hash);
+    this.blocks.push(newBlock);
 
   }
 
@@ -110,7 +137,21 @@ class Blockchain {
    */
   getBalance(publicKey) {
     // Your code here
+    let balance = 0;
+    this.blocks.forEach(function (block){
+      block.transactions.forEach(function(trans) {
+        console.log("balance", balance)
+        if (trans.recipient == publicKey){
+          balance += trans.amount;
+        }
+        if (trans.source == publicKey){
+          balance -= trans.amount;
+        }
+      });
+      
 
+    })
+    return balance;
   }
 }
 
